@@ -2,7 +2,7 @@
 
 ### 一、贪心
 
-- #### 455、分发饼干
+#### 455、分发饼干
 
 - 我的做法是排序+双指针遍历，利用贪心思想，先拿最小尺寸的饼干满足要求最小的孩子，依次遍历
 
@@ -50,7 +50,7 @@ public:
 
 
 
-- #### 135、分发糖果
+#### 135、分发糖果
 
 - 我的做法是正反遍历，每次都找局部最优（反向遍历时需要做额外的判断，因为正向遍历有初步结果）
 
@@ -141,8 +141,6 @@ public:
 
 
 
-
-
 #### 605、种花问题
 
 - 我的思路就是简单的一个一个位置判断，满足则插入
@@ -210,7 +208,7 @@ public:
 
 
 
-- #### 763、划分字母区间
+#### 763、划分字母区间
 
 - 我的思路是从前往后一块一块满足（利用贪心找当前最优，一旦满足就加入结果），一直迭代往后找
 
@@ -295,7 +293,7 @@ public:
 
 
 
-- #### 406、根据身高重建队列
+#### 406、根据身高重建队列
 
 - 没想出好方法，但是参考答案后发现该题关键在于排序，以身高降序，保证前面的都比自己高，那么只要插在第二个元素对应的索引上即是其正确的位置。身高相同的，位次低的在前面
 
@@ -352,7 +350,7 @@ public:
 
 ### 二、双指针
 
-- #### 167、两数之和
+#### 167、两数之和
 
 - 我的想法是：
 
@@ -377,7 +375,7 @@ public:
 
 
 
-- #### 88、合并两个有序数组
+#### 88、合并两个有序数组
 
 - 我的思路是双指针：
 
@@ -413,7 +411,7 @@ public:
 
 
 
-- #### 142、环形链表3
+#### 142、环形链表3
 
 - 我的思路是快慢指针（一个一次2步一个一次1步，遇见时让快指针回到头节点并让其也一次走1步，相遇即环路开始点）：
 
@@ -453,7 +451,7 @@ public:
 
 
 
-- #### 76、最小覆盖字串
+#### 76、最小覆盖字串
 
 - 我的思路是滑动窗口（超时了，265/266）
 
@@ -502,4 +500,131 @@ public:
     }
 };
 ```
+
+
+
+#### 633、平方数之和
+
+- 我的思路是
+
+```c++
+class Solution {
+public:
+    bool judgeSquareSum(int c) {
+        int r = sqrt(c), l = 0;
+        while(l <= r){
+            if(c - l * l == r * r) return true;
+            else if(c - l * l < r * r) r--;
+            else l++;
+        }
+        return false;
+    }
+};
+```
+
+
+
+#### 680、验证回文字符串2==（关键）==
+
+- 我的思路是双指针，遇到不对判断移动哪根指针（462 / 469）
+
+```c++
+class Solution {
+public:
+    bool validPalindrome(string s) {
+        int n = s.size();
+        if(n <= 2) return true;
+        int l = 0, r = n - 1;
+        int cnt = 0;
+        while(l <= r){			//=没啥意义，因为偶数不会出现，奇数中间一个不用管
+            if(s[l] == s[r]){
+                l++;
+                r--;
+            }else{
+                if(s[l + 1] == s[r]){
+                    l++;
+                    cnt++;
+                }
+                else if(s[r - 1] == s[l]){
+                    r--;
+                    cnt++;
+                }else{
+                    l++;
+                    cnt++;
+                }
+            }
+            if(cnt > 1) return false;
+        }
+        return true;
+    }
+};
+```
+
+- 回文字符串很关键的方法，参考答案的思路为按照不允许删除字符处理
+
+```c++
+//关键在于s[l] != s[r]时，对s[l + 1, r]和s[l, r - 1]两个区间判断是否回文即可
+
+class Solution {
+public:
+    bool check(string s, int l, int r){
+        while(l < r){
+            if(s[l] != s[r]) return false;
+            l++;
+            r--;
+        }
+        return true;
+    }
+    bool validPalindrome(string s) {
+        int l = 0, r = s.size() - 1;
+        while(l < r){
+            if(s[l] == s[r]){
+                l++;
+                r--;
+                continue;
+            }else{
+                return check(s, l + 1, r) || check(s, l, r - 1);
+            }
+        }
+        return true;
+    }
+};
+```
+
+- 其中，一旦s[low]!=s[high]，对两个字区间判断的结果直接return，因为只能修改一个位置
+
+
+
+#### 524、通过删除字母匹配到字典最长单词
+
+- 我的思路是双指针，分别对每个dict中的单词与字符串s进行比较（看代码即可理解）
+
+```c++
+class Solution {
+public:
+    string findLongestWord(string s, vector<string>& dictionary) {
+        string ans = "";
+        int len = 0;
+        for(int i = 0; i < dictionary.size(); i++){
+            int p = 0, q = 0;
+            while(p < dictionary[i].size() && q < s.size()){
+                if(dictionary[i][p] == s[q]){
+                    p++;
+                    q++;
+                }else{
+                    q++;
+                }
+            }
+            if(p == dictionary[i].size()){
+                ans = (dictionary[i].size() > ans.size() || (dictionary[i].size() == ans.size() && dictionary[i] <= ans)) ? dictionary[i] : ans;
+            }
+        } 
+        return ans;
+    }
+};
+```
+
+
+
+
 
