@@ -626,5 +626,186 @@ public:
 
 
 
+### 三、二分查找
+
+==推荐写法（nums.size() == 1时需要额外判断）==
+
+```c++
+int l = 0, r = nums.size() - 1;
+while(l <= r){
+    //...
+    l = mid + 1;
+    r = mid - 1;
+    //...
+}
+```
+
+- 具体需要结合情况分析（找几个例子模拟一下题意）
+
+- 其中while的条件能否取等号的关键在于（取到等号时的那一次while循环有没有必要）：
+
+```c++
+//实际上哪怕取下面这一套写法，最后l必然也会等于r，但区别在于等于r之后直接while不满足退出了
+//若nums[mid]在l == r时的值可能是需要返回的答案，取while(l <= r)比较好，实际可以都这么写，特殊情况再分析
+while(l < r){
+	l = mid + 1;
+    r = mid;
+}
+```
 
 
+
+
+
+#### 69、x的平方根
+
+- 我的思路有问题，参考了答案，主要就是向下取整（只在<=时更改ans）
+
+```c++
+class Solution {
+public:
+    int mySqrt(int x) {
+        if(x == 1) return 1;
+        int l = 0, r = x, ans = 0;
+        while(l < r){
+            int mid = l + (r - l) / 2;
+            if((long)mid * mid <= x){
+                l = mid + 1;
+                ans = mid;
+            }else{
+                r = mid;
+            }
+        }
+        return ans;
+    }
+};
+```
+
+- 这个ans在很多二分查找的题中要用到，表示满足条件时先记录的值，因为这题是从小到大去逼近
+
+
+
+#### 34、在排序数组中找第一个和最后一个target（==关键==）
+
+- 我的思路是实现louerBound和upperBound两个函数即可（==向上取整==）
+
+```c++
+class Solution {
+public:
+    int myUpperBound(vector<int>& nums, int target){
+        int l = 0, r = nums.size() - 1, mid = 0;
+        while(l < r){
+            mid = l + (r - l + 1) / 2;
+            if(nums[mid] <= target){
+                l = mid;
+
+            }else{
+                r = mid - 1;
+            }
+        }
+        return l;
+    }
+    int myLowerBound(vector<int>& nums, int target){
+        int l = 0, r = nums.size() - 1, mid = 0;
+        while(l < r){
+            mid = l + (r - l) / 2;
+            if(nums[mid] >= target){
+                r = mid;
+            }else{
+                l = mid + 1;
+            }
+        }
+        return l;
+    }
+    vector<int> searchRange(vector<int>& nums, int target) {
+        if(nums.empty()) return {-1, -1};
+        int l = myLowerBound(nums, target);
+        int r = myUpperBound(nums, target);
+        if(nums[l] != target) return {-1, -1};
+        return {l ,r};
+    }
+};
+```
+
+- ==二分查找的关键就是需要对照题目找实例看是否能满足==
+
+
+
+#### 81、搜索旋转排序数组2（==很关键，仔细揣摩==）
+
+- 我的主要思路是判断nums[l]和nums[mid]大小：
+  - 若nums[mid]较小，则必然在右半部分（折断后的后面，值比较小），此时右半区间是有序的
+    - 若此时nums[mid] < target，target可能在左半部分也可能在右半部分
+      - 判断，若target处于有序区间即右半区间内，l = mid + 1
+    - 其余情况直接都需要在左边解决，取r = mid即可
+  - 若nums[mid]较大，则必然在左半部分（折断后的前面，值比较大），此时左半区间是有序的
+    - 情况和上述同理
+
+- 一个关键点在于其非递减，所以nums[l] == nums[mid]时无法判断区间，做额外处理(l++)
+
+```c++
+class Solution {
+public:
+    bool search(vector<int>& nums, int target) {
+        if(nums.size() == 1){
+            if(nums[0] == target) return true;
+            else return false;
+        }
+        int l = 0, r = nums.size() - 1, mid = 0;
+        while(l <= r){
+            mid = l + (r - l) / 2;
+            if(nums[mid] == target) return true;
+            if(nums[mid] == nums[l]){
+                l++;
+            }else if(nums[mid] < nums[l]){
+                if(nums[mid] < target && target <= nums[r]){
+                    l = mid + 1;
+                }else{
+                    r = mid - 1;
+                }
+            }else{
+                if(nums[mid] > target && target >= nums[l]){
+                    r = mid - 1;
+                }else{
+                    l = mid + 1;
+                }
+            }
+        }
+        return false;
+    }
+};
+```
+
+
+
+#### 154、寻找旋转排序数组中的最小值2
+
+- 根据上述思路画图并比对具体例子调试（自己写的代码）如下：
+
+```c++
+class Solution {
+public:
+    int findMin(vector<int>& nums) {
+        int l = 0, r = nums.size() - 1, mid;
+        while(l < r){
+            mid = l + (r - l) / 2;
+            if(nums[mid] == nums[l]){
+                if(nums[l] < nums[r]) return nums[l];
+                l++;
+            }
+            else if(nums[mid] < nums[l]){
+                r= mid;
+            }else{
+                if(nums[mid] > nums[r]){
+                    l = mid + 1;
+                }else{
+                    r = mid;
+                }
+            }
+        }
+        return nums[l];		//此处的l和r均可，因为这种while(l < r)最后l == r
+    }
+};
+```
+
+- 这题就是不能取等于号的情形，因为根据二分最后的结果必然是最小的，若取等号则还会再进入一次while循环更改最终的l/r，把对的下标改错了
