@@ -809,3 +809,182 @@ public:
 ```
 
 - 这题就是不能取等于号的情形，因为根据二分最后的结果必然是最小的，若取等号则还会再进入一次while循环更改最终的l/r，把对的下标改错了
+
+
+
+### 四、排序
+
+#### 215、数组中的第K个最大元素（==快速选择==）
+
+- 就是双指针结合快速排序的思想
+
+```c++
+class Solution {
+public:
+    int quickSelect(vector<int>& nums, int l, int r){
+        int first = l, last = r;
+        int pivot = nums[first];
+        while(first < last){
+            while(first < last && nums[last] >= pivot) last--;
+            nums[first] = nums[last];
+            while(first < last && nums[first] <= pivot) first++;
+            nums[last] = nums[first];
+        }
+        nums[first] = pivot;
+        return first;
+    }
+    int findKthLargest(vector<int>& nums, int k) {
+       int target = nums.size() - k;
+       int l = 0, r = nums.size() - 1, mid = 0;
+       while(l < r){
+           mid = quickSelect(nums, l , r);
+           if(mid == target) return nums[mid];
+           else if(mid < target) l = mid + 1;
+           else r= mid;
+       } 
+       return nums[l];
+    }
+};
+```
+
+
+
+#### 347、前k个高频元素（==桶排序==）
+
+- 桶排序
+
+```c++
+class Solution {
+public:
+    vector<int> topKFrequent(vector<int>& nums, int k) {
+        map<int, int> dict;
+        int cnt = 0;
+        for(const auto& num : nums){
+            cnt = max(cnt, ++dict[num]);
+        }
+        vector<vector<int>> buckets(cnt + 1);
+        for(const auto& ele : dict){
+            buckets[ele.second].push_back(ele.first);
+        }
+        vector<int> ans;
+        for(int i = 0; i <= cnt; i++){
+            for(const auto& num : buckets[cnt - i]){
+                if(ans.size() == k) return ans;
+                ans.push_back(num);
+            }
+        }
+        return ans;
+    }
+};
+```
+
+
+
+#### 451、根据字符出现频率排序
+
+- 桶排序
+
+```c++
+class Solution {
+public:
+    string frequencySort(string s) {
+        map<char, int> dict;
+        int cnt = 0;
+        for(const auto& ch : s){
+            cnt = max(cnt, ++dict[ch]);
+        }
+        vector<vector<char>> buckets(cnt + 1);
+        for(const auto& ele : dict){
+            buckets[ele.second].push_back(ele.first);
+        }
+        string ans = "";
+        for(int i = cnt; i >= 1; i--){
+            for(const auto& ch : buckets[i]){
+                for(int j = 0; j < i; j++){
+                    ans += ch;
+                }
+            }
+        }
+        return ans;
+    }
+};
+```
+
+
+
+### 五、==搜索==
+
+#### 695、岛屿的最大面积
+
+- 我的思路是深度优先搜索，搜过的地方直接置为0，先判断再搜索
+  - 判断是否进行dfs/bfs条件时，边界条件要放在grid对应节点值==1之前（条件判断从左往右，放左边可能越界）
+  - bfs关注修改状态的时机（该题为push进去的时候直接修改）
+
+```c++
+//dfs版本
+class Solution {
+public:
+    vector<int> direction{-1, 0, 1, 0, -1};
+    int dfs(vector<vector<int>>& grid, int r, int c){
+        int cnt = 1;
+        grid[r][c] = 0;
+        for(int i = 0; i < 4; i++){
+            int x = r + direction[i], y = c + direction[i + 1];
+            if(x >= 0 && x < grid.size() && y >= 0 && y < grid[0].size() && grid[x][y] == 1){
+                cnt += dfs(grid, x, y);
+            }
+        }
+        return cnt;
+    }
+    int maxAreaOfIsland(vector<vector<int>>& grid) {
+        int ans = 0;
+        for(int i = 0; i < grid.size(); i++){
+            for(int j = 0; j < grid[0].size(); j++){
+                if(grid[i][j] == 1){
+                    ans = max(ans, dfs(grid, i, j));
+                }
+            }
+        }
+        return ans;
+    }
+};
+
+```
+
+
+
+```c++
+//bfs版本
+class Solution {
+public:
+    vector<int> direction{-1, 0, 1, 0, -1};
+    int maxAreaOfIsland(vector<vector<int>>& grid) {
+        queue<pair<int, int>> q;
+        int ans = 0;
+        for(int i = 0; i < grid.size(); i++){
+            for(int j = 0; j < grid[0].size(); j++){
+                if(grid[i][j] == 1){
+                    q.push({i, j});
+                    int cnt = 1;
+                    grid[i][j] = 0;
+                    while(!q.empty()){
+                        auto node = q.front();
+                        q.pop();
+                        for(int i = 0; i < 4; i++){
+                            int x = node.first + direction[i], y = node.second + direction[i + 1];
+                            if(x >= 0 && x < grid.size() && y >= 0 && y < grid[0].size() && grid[x][y] == 1){
+                                q.push({x, y});
+                                grid[x][y] = 0;
+                                cnt++;
+                            }
+                        }
+                    }
+                    ans = max(ans, cnt);
+                }
+            }
+        }
+        return ans;
+    }
+};
+```
+
