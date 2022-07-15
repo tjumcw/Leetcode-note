@@ -914,7 +914,7 @@ public:
 
 ### 五、==搜索==
 
-#### 695、岛屿的最大面积
+#### 695、岛屿的最大面积（==经典题==）
 
 - 我的思路是深度优先搜索，搜过的地方直接置为0，先判断再搜索
   - 判断是否进行dfs/bfs条件时，边界条件要放在grid对应节点值==1之前（条件判断从左往右，放左边可能越界）
@@ -984,6 +984,60 @@ public:
             }
         }
         return ans;
+    }
+};
+```
+
+
+
+#### 547省份数量（==关键题，理解dfs和图论==）
+
+- 我的理解是其本质和上一题的岛屿题相同，不同的是节点及其延伸出的方向
+
+  - 对于题目 695，图的表示方法是，每个位置代表一个节点，每个节点与上下左右四个节点相邻。
+
+  - 而在这一道题里面，每一行（列）表示一个节点，它的每列（行）表示是否存在一个相邻节点。
+
+  - 因此题目 695 拥有 m × n 个节点，每个节点有 4 条边
+
+    - ```c++
+      vector<int> direction{-1, 0, 1, 0, -1}		//进行搜索
+      ```
+
+    - 且需要对边界进行判断
+
+  - 而本题拥有 n 个节点，每个节点最多 有 n 条边，即与所有城市相连，最少可以有 1 条边，即与自己相连。
+
+    - 上题需对4个方向进行搜索
+    - 本题对每一行（每个城市）只需检索一次
+    - 每一行需要对其每个元素进行检索，若满足条件则dfs延申向其他城市
+    - ==理解成每个城市都可以是n分叉的树节点==
+    - 一个节点即一行（一个城市），其每列的元素都是其需要判断是否进行dfs的条件
+    - 一旦dfs就跳到另外的城市（n叉树的下一个节点，其也是一个n叉树）
+    - 对一个城市（一行）的搜索，可以排除该城市连通的所有城市
+
+```c++
+class Solution {
+public:
+    void dfs(vector<vector<int>>& isConnected, int idx, vector<bool>& visit){
+        visit[idx] = true;
+        for(int i = 0; i < isConnected[idx].size(); i++){
+            if(isConnected[idx][i] == 1 && !visit[i]){
+                dfs(isConnected, i, visit);
+            }
+        }
+    }
+    int findCircleNum(vector<vector<int>>& isConnected) {
+        int cnt = 0;
+        vector<bool> visit(isConnected.size(), false);
+        for(int i = 0; i < isConnected.size(); i++){
+            if(!visit[i]) {
+                dfs(isConnected, i, visit);
+                cnt++;
+            }
+            
+        }
+        return cnt;
     }
 };
 ```
