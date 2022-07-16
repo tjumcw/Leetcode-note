@@ -1,3 +1,5 @@
+# Leetcode题解笔记
+
 ### 四、排序
 
 #### 215、数组中的第K个最大元素（==快速选择==）
@@ -715,4 +717,98 @@ public:
 ```
 
 
+
+#### 47、全排列2
+
+- 我的思路是按照普通的排列做，最后利用set去重（因为该题有重复元素）
+
+```c++
+class Solution {
+public:
+    vector<vector<int>> tmp;
+    vector<int> perm;
+    void backTrack(vector<int>& nums, int level, vector<bool>& visit){
+        int n = nums.size();
+        if(level == n){
+            tmp.push_back(perm);
+        }
+        for(int i = 0; i < n; i++){
+            if(visit[i]) continue;
+            visit[i] = true;
+            perm.push_back(nums[i]);
+            backTrack(nums, level + 1, visit);
+            perm.pop_back();
+            visit[i] = false;
+        }
+    }
+    vector<vector<int>> permuteUnique(vector<int>& nums) {
+        vector<bool> visit(nums.size(), false);
+        backTrack(nums, 0, visit);
+        set<vector<int>> s;
+        for(const auto& t : tmp){
+            s.insert(t);
+        }
+        vector<vector<int>> ans;
+        for(const auto& vec : s){
+            ans.push_back(vec);
+        }
+        return ans;
+    }
+};
+```
+
+- 答案的思路比较好，不过我个人用的就这种简单的去重方法
+
+
+
+#### 40、组合总和（超时）
+
+- 组合题目有点类似==背包问题==，就是选择或是不选择
+- 依旧视作普通组合问题加set去重的套路，但是（172/176）
+
+```c++
+class Solution {
+public:
+    vector<vector<int>> ans;
+    vector<int> com;
+    void backTrack(vector<int>& candidates, int target, int idx){
+        if(target == 0){
+            ans.push_back(com);
+            return;
+        }
+        if(idx == candidates.size()) return;
+        if(target >= candidates[idx]){
+            com.push_back(candidates[idx]);
+            backTrack(candidates, target - candidates[idx], idx + 1);
+            com.pop_back();
+        }
+        backTrack(candidates, target, idx + 1);
+    }
+    vector<vector<int>> combinationSum2(vector<int>& candidates, int target) {
+        sort(candidates.begin(), candidates.end());
+        backTrack(candidates, target, 0);
+        set<vector<int>> s;
+        for(const auto& vec : ans){
+            s.insert(vec);
+        }
+        vector<vector<int>> perms;
+        for(const auto& vec : s){
+            perms.push_back(vec);
+        }
+        return perms;
+    }
+};
+```
+
+
+
+#### ==组合和排列小结==
+
+- 排列需要考虑每个元素的位置，组合只需要考虑选不选这个元素
+  - 在每次调用中，排列都需要for循环针对每个元素进行判断
+  - 组合只需要在每次调用中判断是否选择该元素，即只有两种情形（无须for）
+- 由于排列每次调用都要考虑所有元素，组合只需要一直往后递增idx即可（对每个idx判断是否选择该元素）
+  - 排列需要记忆化，即需要visit矩阵记录当前元素是否访问过
+  - 组合不需要visit，只需要针对选或不选写清楚即可
+- 具体的对比可以看上面两道题以及回溯里的46和77
 
