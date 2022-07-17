@@ -281,3 +281,195 @@ public:
 };
 ```
 
+
+
+### ==子序列问题==
+
+- 第一种动态规划方法是，定义一个 dp 数组，其中 dp[i] 表示以 i 结尾的子 序列的性质。在处理好每个位置后，统计一遍各个位置的结果即可得到题目要求的结果。
+- 第二种动态规划方法是，定义一个 dp 数组，其中 dp[i] 表示到位置 i 为止 的子序列的性质，并不必须以 i 结尾。这样 dp 数组的最后一位结果即为题目所求，不需要再对每 个位置进行统计。
+
+
+
+#### 300、最长递增子序列
+
+- 思路是2重for循环的dp，因为需要考虑位置（可以不是连续的）
+- 此处dp[i]的语义是以下标i为终点的子序列的性质，需要统计一遍结果
+
+```c++
+class Solution {
+public:
+    int lengthOfLIS(vector<int>& nums) {
+        int n = nums.size();
+        vector<int> dp(n + 1, 1);
+        dp[0] = 0;
+        int ans = 0;
+        for(int i = 1; i <= n; i++){
+            for(int j = 1; j <= i; j++){
+                if(nums[i - 1] > nums[j - 1]){
+                    dp[i] = max(dp[i], dp[j] + 1);
+                }
+            }
+            ans = max(dp[i], ans);
+        }
+        return ans;
+    }
+};
+```
+
+
+
+#### 1143、最长公共子序列
+
+- 此处dp的语义：到第一个字符串位置 i 为止、到 第二个字符串位置 j 为止、最长的公共子序列长度。
+- 直接返回dp（m，n）即为最终结果
+
+```c++
+class Solution {
+public:
+    int longestCommonSubsequence(string text1, string text2) {
+        int m = text1.size(), n = text2.size();
+        vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));
+        for(int i = 1; i <= m; i++){
+            for(int j = 1; j <= n; j++){
+                if(text1[i - 1] == text2[j - 1]){
+                    dp[i][j] = dp[i - 1][j - 1]  + 1;
+                }else{
+                    dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]);
+                }
+            }
+        }
+        return dp[m][n];
+    }
+};
+```
+
+
+
+### ==背包问题（很关键）==
+
+- 需要理解背包问题的定义，以便各种场景的转换（选或者不选）
+
+- 有 N 个物品和容量为 W 的背包，每个物品都有 自己的体积 w 和价值 v，
+- 求拿哪些物品可以使得背包所装下物品的总价值最大。
+- 如果限定每种物 品只能选择 0 个或 1 个，则问题称为 0-1 背包问题；
+- 如果不限定每种物品的数量，则问题称为无 界背包问题或完全背包问题。
+- 关键在于以下的状态转移方程（==0-1背包问题==）
+
+```c++
+vector<vector<int>> dp(N + 1, vector<int>(W + 1, 0));
+for (int i = 1; i <= N; ++i) {
+	int w = weights[i-1], v = values[i-1];
+	for (int j = 1; j <= W; ++j) {
+		if (j >= w) {
+			dp[i][j] = max(dp[i-1][j], dp[i-1][j-w] + v);
+		} else {
+			dp[i][j] = dp[i-1][j];
+        }
+    }
+}
+```
+
+- 完全背包问题只需要修改一处即可（结合情景分析就很好理解）
+
+```c++
+dp[i][j] = max(dp[i-1][j], dp[i][j-w] + v);
+```
+
+
+
+#### 416、分割等和子集
+
+- 关键在于将其化为背包问题
+
+```c++
+class Solution {
+public:
+    bool canPartition(vector<int>& nums) {
+        int sum = accumulate(nums.begin(), nums.end(), 0);
+        if(sum % 2) return false;
+        int target = sum / 2;
+        int n = nums.size();
+        vector<vector<bool>> dp(n + 1, vector<bool>(target + 1, false));
+        for(int i = 0; i <= n; i++){
+            dp[i][0] = true;
+        }
+        for(int i = 1; i <= n; i++){
+            for(int j = 1; j <= target; j++){
+                if(j >= nums[i - 1]){
+                    dp[i][j] = dp[i - 1][j - nums[i - 1]] || dp[i - 1][j];
+                }else{
+                    dp[i][j] = dp[i - 1][j];
+                }
+            }
+        }
+        return dp[n][target];
+    }
+};
+```
+
+
+
+#### 474、一和零（==好好理解==）
+
+- 该题的关键在于有两个背包（三维，可通过倒序遍历压缩空间，但我就用三维的学习）
+- j和p建议从0开始（有时候是1，看情况），最好不要直接从zero/one开始（无非优化而已，有时候会错）
+- 需要有分支
+  - if(j >= zero && p >= one) 
+  - else
+
+```c++
+class Solution {
+public:
+    int helper(string& str){
+        int ret = 0; 
+        for(int i = 0; i < str.size(); i++){
+            if(str[i] == '0') ret++;
+        }
+        return ret;     
+    }
+    int findMaxForm(vector<string>& strs, int m, int n) {
+        int k = strs.size();
+        vector<vector<vector<int>>> dp(k + 1, vector<vector<int>>(m + 1, vector<int>(n + 1, 0)));
+        for(int i = 1; i <= k; i++){
+            int zero = helper(strs[i - 1]), one = strs[i - 1].size() - zero;
+            for(int j = 0; j <= m; j++){
+                for(int p = 0; p <= n; p++){
+                    if(j >= zero && p >= one) dp[i][j][p] = max(dp[i - 1][j - zero][p - one] + 1, dp[i - 1][j][p]);
+                    else dp[i][j][p] = dp[i - 1][j][p];
+                }
+            }
+        }
+        return dp[k][m][n];
+    }
+};
+```
+
+
+
+#### 322、零钱兑换
+
+- 关键在于初值给INT_MAX会越界，所以给amount + 2即可（全用1元硬币达到amount也不会超过这个数）
+- 最后判断是否更改了，没更改即不符合要求
+
+```c++
+class Solution {
+public:
+    int coinChange(vector<int>& coins, int amount) {
+        int n = coins.size();
+        vector<vector<int>> dp(n + 1, vector<int>(amount + 1, amount + 2));
+        for(int i = 0; i <= n; i++){
+            dp[i][0] = 0;
+        }
+        for(int i = 1; i <= n; i++){
+            for(int j = 0; j <= amount; j++){
+                if(j >= coins[i - 1]){
+                    dp[i][j] = min(dp[i][j - coins[i - 1]] + 1, dp[i - 1][j]);
+                }else{
+                    dp[i][j] = dp[i - 1][j];
+                }
+            }
+        }
+        return dp[n][amount] == amount + 2 ? -1 : dp[n][amount];
+    }   
+};
+```
