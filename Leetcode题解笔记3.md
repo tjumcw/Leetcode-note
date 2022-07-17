@@ -1,6 +1,8 @@
 # Leetcode题解笔记
 
-### 六、动态规划（==重要==）
+## 六、动态规划（==重要==）
+
+### ==一维dp==
 
 #### 70、爬楼梯
 
@@ -93,6 +95,8 @@ public:
 ```
 
 
+
+### ==二维dp==
 
 #### 64、最小路径和
 
@@ -188,6 +192,91 @@ public:
             }
         }
         return num * num;
+    }
+};
+```
+
+
+
+### ==分割类型==
+
+- 对于分割类型题，动态规划的状态转移方程通常并不依赖相邻的位置，而是依赖于满足分割 条件的位置。
+- 可以参看279和139理解
+
+#### 279、完全平方数
+
+- 思路是dp，主要关键就在于边界条件的给定，dp[0] = 0作为dp的起点
+
+```c++
+class Solution {
+public:
+    int numSquares(int n) {
+        vector<int> dp(n + 1, INT_MAX);
+        dp[0] = 0;
+        for(int i = 1; i <= n; i++){
+            for(int j = 1; j * j <= i; j++){
+                dp[i] = min(dp[i], dp[i - j * j] + 1);
+            }
+        }
+        return dp[n];
+    }
+};
+```
+
+
+
+#### 91、解码方法（==细节较多==）
+
+- 我的思路不太全，参考了答案
+
+```c++
+class Solution {
+public:
+    int numDecodings(string s) {
+        int n = s.size();
+        vector<int> dp(n + 1, 1);
+        if(s[0] - '0' == 0) return false;
+        for(int i = 2; i <= n; i++){
+            int num = s[i - 1] - '0';
+            int prev = s[i - 2] - '0';
+            if((prev == 0 || prev > 2) && num == 0) return 0;
+            if((prev > 0 && prev < 2) || (prev == 2 && num < 7)){
+                if(num == 0){
+                    dp[i] = dp[i - 2];
+                }else{
+                    dp[i] = dp[i - 1] + dp[i - 2];
+                }
+            }else{
+                dp[i] = dp[i - 1];
+            }
+        }
+        return dp[n];
+    }
+};
+```
+
+
+
+#### 139、单词拆分（类似完全平方数分割问题）
+
+- 思路类似完全平方数
+
+```c++
+class Solution {
+public:
+    bool wordBreak(string s, vector<string>& wordDict) {
+        int n = s.size();
+        vector<int> dp(n + 1, false);
+        dp[0] = true;
+        for(int i = 1; i <= n; i++){
+            for(const auto& word : wordDict){
+                int n = word.size();
+                if(i >= n && s.substr(i - n, n) == word){
+                    dp[i] = d[i] || dp[i - n];
+                }
+            }
+        }
+        return dp[n];
     }
 };
 ```
