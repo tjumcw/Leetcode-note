@@ -473,3 +473,267 @@ public:
     }   
 };
 ```
+
+
+
+### ==字符串编辑==
+
+#### 72、编辑距离（==边界条件非常关键==）
+
+- 该题的关键在于需要从0开始比较，即没有字符的位置进行比较
+- 将dp声明为size + 1，一般直接从1开始，但本题从0开始
+- 因为1个空字符串可以通过增加变成另一个字符串（另一个字符串通过删除也可以）
+- 以后都要仔细考虑0处的语义再决定是否需要（也就是边界条件非常关键）
+- 一个为空字符串一个不为空时很好理解，需要的操作数就是不为空的字符串的长度
+
+```c++
+class Solution {
+public:
+    int minDistance(string word1, string word2) {
+        int m = word1.size(), n = word2.size();
+        vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));
+        for(int i = 0; i <= m; i++){
+            for(int j = 0; j <= n; j++){
+                if(i == 0) dp[i][j] = j;
+                else if(j == 0) dp[i][j] = i;
+                else{
+                    dp[i][j] = min({dp[i - 1][j - 1] + (word1[i - 1] == word2[j - 1] ? 0 : 1), dp[i - 1][j] + 1, dp[i][j - 1] + 1});
+                }
+            }
+        }
+        return dp[m][n];
+    }
+};
+```
+
+
+
+#### 650、只有两个键的键盘
+
+- 思路是简单的dp，但是状态转移是除法不是减法
+
+```c++
+class Solution {
+public:
+    int minSteps(int n) {
+        if(n == 1) return 0;
+        vector<int> dp(n + 1, n + 2);
+        dp[1] = 0;
+        for(int i = 2; i <= n; i++){
+            for(int j = 1; j <= i; j++){
+                if(i % j == 0){
+                    dp[i] = min(dp[i], dp[j] + i / j);
+                }
+            }
+        }
+        return dp[n];
+    }
+};
+```
+
+
+
+### ==股票交易==
+
+- 一般把dp定义为n长度
+
+#### 121、买卖股票的最佳时机
+
+- 思路就是维护一个哨兵（最小值），状态转移分为卖出和不卖出两种，取较大的那种
+
+```c++
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        if(n == 0) return 0;
+        vector<int> dp(n, 0);
+        int pivot = prices[0];
+        for(int i = 1; i < n; i++){
+            pivot = min(pivot, prices[i]);
+            dp[i] = max(dp[i - 1], prices[i] - pivot);
+        }
+        return dp[n - 1];
+    }
+};
+```
+
+
+
+#### 122、买卖股票的最佳时机2
+
+- 思路是一旦prices[i] > prices[i - 1]就更新dp[i]，否则dp[i] = dp[i - 1]
+
+```c++
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        vector<int> dp(n, 0);
+        for(int i = 1; i < n; i++){
+            if(prices[i] > prices[i - 1]){
+                dp[i] = dp[i - 1] + prices[i] - prices[i - 1];
+            }else{
+                dp[i] = dp[i - 1];
+            }
+        }
+        return dp[n - 1];
+    }
+};
+```
+
+- 这样的思路不是很模式化，选择修改，修改状态定义如下：
+
+- dp(i，0)表示第 i 天交易完后手里没有股票的最大利润
+- dp(i，1)表示第 i天交易完后手里持有一支股票的最大利润（i 从 0开始）
+- 最大利润必然在最后手上不持有股票时取得
+
+```c++
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        vector<vector<int>> dp(n, vector<int>(2, 0));
+        dp[0][0] = 0, dp[0][1] = -prices[0];
+        for(int i = 1; i < n; i++){
+            dp[i][0] = max(dp[i - 1][0], dp[i - 1][1] + prices[i]);
+            dp[i][1] = max(dp[i - 1][1], dp[i - 1][0] - prices[i]);
+        }
+        return dp[n - 1][0];
+    }
+};
+```
+
+
+
+
+
+#### 123、买卖股票的最佳时机3
+
+- 关键在于找准状态的定义
+
+- 一天一共就有五个状态，
+
+  0. 没有操作
+
+  1. 第一次买入（持有）
+  2. 第一次卖出（未持有）
+  3. 第二次买入（持有）
+  4. 第二次卖出（未持有）
+
+- 需要注意的是dp(i,1)表示第i天为止只进行了一次买入，并不是一定指当天买入
+
+- 其他状态也类似，表示的是当前所处的状态，不一定是当天更改
+
+```c++
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        vector<vector<int>> dp(n, vector<int>(5, 0));
+        dp[0][0] = 0, dp[0][1] = -prices[0], dp[0][2] = 0, dp[0][3] = -prices[0], dp[0][4] = 0;
+        for(int i = 1; i < n; i++){
+            dp[i][0] = dp[i - 1][0];
+            dp[i][1] = max(dp[i - 1][1], dp[i - 1][0] - prices[i]);
+            dp[i][2] = max(dp[i - 1][2], dp[i - 1][1] + prices[i]);
+            dp[i][3] = max(dp[i - 1][3], dp[i - 1][2] - prices[i]);
+            dp[i][4] = max(dp[i - 1][4], dp[i - 1][3] + prices[i]);
+        }
+        return dp[n - 1][4];
+    }
+};
+```
+
+
+
+#### 188、买卖股票的最佳时机4（==重要==）
+
+- 是上一题的泛化版本，不好2层枚举需要用3层dp
+- dp（i，j，k）表示第i天，交易了j次，当前是否持有（0未持有，1持有）
+- 交易的次数指的是卖出了多少次
+- 若卖出了5次，又再次买入，当前交易次数为5次（这次的交易未结束）
+- 当前交易为j时的持有，可能是前天交易j的持有，或前天交易j的未持久在今日买入
+  - 不能是前天交易j - 1在今日买入，这样的话买入这次未卖出，状态仍为j - 1次
+
+```c++
+class Solution {
+public:
+    int maxProfit(int k, vector<int>& prices) {
+        if(prices.empty()) return 0;
+        int n = prices.size();
+        vector<vector<vector<int>>> dp(n, vector<vector<int>>(k + 1, vector<int>(2, 0)));
+        for(int j = 0; j <= k; j++){
+            dp[0][j][0] = 0;
+            dp[0][j][1] = -prices[0];
+        }
+        for(int i = 1; i < n; i++){
+            for(int j = 0; j <= k; j++){
+                if(j == 0){
+                    dp[i][j][0] = dp[i - 1][j][0];
+                    dp[i][j][1] = max(dp[i - 1][j][0] - prices[i], dp[i - 1][j][1]);
+                }else{
+                    dp[i][j][0] = max(dp[i - 1][j][0], dp[i - 1][j - 1][1] + prices[i]);
+                    dp[i][j][1] = max(dp[i - 1][j][1], dp[i - 1][j][0] - prices[i]);
+                }
+            }
+        }
+        int ans = 0;
+        for(int j = 0; j <= k; j++){
+            ans = max(ans, dp[n - 1][j][0]);
+        }
+        return ans;
+    }
+};
+```
+
+
+
+#### 309、最佳买卖股票时机含冷冻期
+
+- 关键在于定义状态
+- dp(i，0)表示未持有股票，且不处于冷冻期
+- dp(i，1)表示持有股票，且不处于冷冻期
+- dp(i，2)表示处于冷冻期（前一天卖出了股票）
+- 最后的利润必然是不持有股票的两种情况下取到的最大值
+
+```c++
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        vector<vector<int>> dp(n, vector<int>(3, 0));
+        dp[0][1] = -prices[0];
+        for(int i = 1; i < n; i++){
+            dp[i][0] = max(dp[i - 1][0], dp[i - 1][2]);
+            dp[i][1] = max(dp[i - 1][1], dp[i - 1][0] - prices[i]);
+            dp[i][2] = dp[i - 1][1] + prices[i];
+        }
+        return max(dp[n - 1][0], dp[n - 1][2]);
+    }
+};
+```
+
+
+
+#### 714、买卖股票的最佳时机含手续费
+
+- 与题122几乎一样，状态转移也类似
+- dp(i，0)表示第 i 天交易完后手里没有股票的最大利润（i 从 0开始）
+- dp(i，1)表示第 i天交易完后手里持有一支股票的最大利润（最大利润必然在最后手上不持有股票时取得）
+
+```c++
+class Solution {
+public:
+    int maxProfit(vector<int>& prices, int fee) {
+        int n = prices.size();
+        vector<vector<int>> dp(n, vector<int>(2, 0));
+        dp[0][0] = 0, dp[0][1] = -prices[0];
+        for(int i = 1; i < n; i++){
+            dp[i][0] = max(dp[i - 1][0], dp[i - 1][1] + prices[i] - fee);
+            dp[i][1] = max(dp[i - 1][1], dp[i - 1][0] - prices[i]);
+        }
+        return dp[n - 1][0];
+    }
+};
+```
+
