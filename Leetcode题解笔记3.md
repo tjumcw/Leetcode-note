@@ -285,8 +285,10 @@ public:
 
 ### ==子序列问题==
 
-- 第一种动态规划方法是，定义一个 dp 数组，其中 dp[i] 表示以 i 结尾的子 序列的性质。在处理好每个位置后，统计一遍各个位置的结果即可得到题目要求的结果。
+- 第一种动态规划方法是，定义一个 dp 数组，其中 dp[i] 表示以 i 结尾的子序列的性质。在处理好每个位置后，统计一遍各个位置的结果即可得到题目要求的结果。
 - 第二种动态规划方法是，定义一个 dp 数组，其中 dp[i] 表示到位置 i 为止 的子序列的性质，并不必须以 i 结尾。这样 dp 数组的最后一位结果即为题目所求，不需要再对每 个位置进行统计。
+
+- 一般对于子数组（要求完全连续）选第一种，对于子字符串（按顺序即可，不需要连续）选第二种
 
 
 
@@ -733,6 +735,86 @@ public:
             dp[i][1] = max(dp[i - 1][1], dp[i - 1][0] - prices[i]);
         }
         return dp[n - 1][0];
+    }
+};
+```
+
+
+
+### 练习
+
+#### 213、打家劫舍2
+
+- 思路是分两个区间分别进行dp，最后取两个结果中那个的较大值
+
+```c++
+class Solution {
+public:
+    int rob(vector<int>& nums) {
+        int n = nums.size();
+        if(n == 1) return nums[0];
+        if(n == 2) return max(nums[0], nums[1]);
+        vector<int> dp(n + 1, 0);
+        dp[0] = 0, dp[1] = nums[0], dp[2] = max(nums[0], nums[1]);
+        for(int i = 3; i < n; i++){
+            dp[i] = max(dp[i - 1], dp[i - 2] + nums[i - 1]);
+        }
+        int tmp = dp[n - 1];
+        dp = vector<int>(n + 1, 0);
+        dp[2] = nums[1], dp[3] = max(nums[1], nums[2]);
+        for(int i = 4; i <= n; i++){
+            dp[i] = max(dp[i - 1], dp[i - 2] + nums[i - 1]);
+        }
+        int ans = max(tmp, dp[n]);
+        return ans;
+    }
+};
+```
+
+
+
+#### 53、最大子数组和
+
+- 关键是确定状态定义以及找到状态转移方程
+  - 状态dp[i]表示以当前下标元素为结尾的子数组的性质
+  - 状态转移方程为dp[i] = max(dp[i - 1] + nums[i], nums[i])
+
+```c++
+class Solution {
+public:
+    int maxSubArray(vector<int>& nums) {
+        int n = nums.size();
+        if(n == 0) return 0;
+        vector<int> dp(n, 0);
+        dp[0] = nums[0];
+        int ans = nums[0];
+        for(int i = 1; i < n; i++){
+            dp[i] = max(dp[i - 1] + nums[i], nums[i]);
+            ans= max(ans, dp[i]);
+        }
+        return ans;
+    }
+};
+```
+
+
+
+#### 343、整数拆分
+
+- 关键思路是找到其状态转移方程
+
+```c++
+class Solution {
+public:
+    int integerBreak(int n) {
+        vector<int> dp(n + 1, 0);
+        dp[0] = 0, dp[1] = 0;
+        for(int i = 2; i <= n; i++){
+            for(int j = 1; j < i; j++){
+                dp[i] = max({dp[i], (i - j) * j, j * dp[i - j]});
+            }
+        }
+        return dp[n];
     }
 };
 ```
