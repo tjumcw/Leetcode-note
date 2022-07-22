@@ -819,3 +819,99 @@ public:
 };
 ```
 
+
+
+#### 583、两个字符串的删除操作
+
+- 思路就是简单的二维dp，涉及字符串的大多数情况设置为n + 1比较合适
+
+```c++
+class Solution {
+public:
+    int minDistance(string word1, string word2) {
+        int m = word1.size(), n = word2.size();
+        vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));
+        for(int i = 1; i <= m; i++){
+            dp[i][0] = i;
+        }
+        for(int j = 1; j <= n; j++){
+            dp[0][j] = j;
+        }
+        for(int i = 1; i <= m; i++){
+            for(int j = 1; j <= n; j++){
+                if(word1[i - 1] == word2[j - 1]){
+                    dp[i][j] = dp[i - 1][j - 1];
+                }else{
+                    dp[i][j] = min(dp[i - 1][j], dp[i][j - 1]) + 1;
+                }
+            }
+        }
+        return dp[m][n];
+    }
+};
+```
+
+
+
+#### 646、最长数对链
+
+- 由于其可以任意选择顺序，所以先简单排序在进行dp
+- 这种数字序列求最长，常选择dp[i]为以i为结尾的子序列性质，并且通过两层for求解一维dp
+
+```c++
+class Solution {
+public:
+    int findLongestChain(vector<vector<int>>& pairs) {
+        int n = pairs.size();
+        sort(pairs.begin(), pairs.end(), [](vector<int>& a, vector<int>& b){
+            return a[0] < b[0];
+        });
+        vector<int> dp(n, 1);
+        int ans = 0;
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j <= i; j++){
+                if(pairs[i][0] > pairs[j][1]){
+                    dp[i] = max(dp[i], dp[j] + 1);
+                }
+            }
+            ans = max(ans, dp[i]);
+        }
+        return ans;
+    }
+};
+```
+
+
+
+#### 376、摆动序列
+
+- 思路是定义两个dp数组（参考的答案）up及down
+  - up为上升摆动序列，即结尾大于前一个元素
+  - down为下降摆动序列，即结尾小于前一个元素
+  - 特殊的，长度为1的序列即是上升摆动序列也是下降摆动序列
+
+```c++
+class Solution {
+public:
+    int wiggleMaxLength(vector<int>& nums) {
+        int n = nums.size();
+        if(n < 2) return n;
+        vector<int> up(n), down(n);
+        up[0] = down[0] = 1;
+        for(int i = 1; i < n; i++){
+            if(nums[i] > nums[i - 1]){
+                up[i] = max(up[i - 1], down[i - 1] + 1);
+                down[i] = down[i - 1];
+            }else if(nums[i] < nums[i - 1]){
+                up[i] = up[i - 1];
+                down[i] = max(down[i], up[i - 1] + 1);
+            }else{
+                up[i] = up[i - 1];
+                down[i] = down[i - 1];
+            }
+        }
+        return max(up[n - 1], down[n - 1]);
+    }
+};
+```
+
